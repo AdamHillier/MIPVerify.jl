@@ -1,6 +1,6 @@
 export batch_find_untargeted_attack
 
-@enum SolveRerunOption never=1 always=2 resolve_ambiguous_cases=3 refine_insecure_cases=4 retarget_infeasible_cases=5
+@enum SolveRerunOption never=1 always=2 resolve_ambiguous_cases=3 refine_insecure_cases=4 retarget_infeasible_cases=5 retarget_successful_cases=6
 
 struct BatchRunParameters
     nn::NeuralNet
@@ -40,6 +40,10 @@ end
 
 function is_infeasible(s::Symbol)::Bool
     s == :Infeasible || s == :InfeasibleOrUnbounded
+end
+
+function is_infeasible(s::String)::Bool
+    s == "Infeasible" || s == "InfeasibleOrUnbounded"
 end
 
 function get_uuid()::String
@@ -132,6 +136,7 @@ function initialize_batch_solve(
 
     summary_file_path = joinpath(main_path, summary_file_name)
     summary_file_path|> create_summary_file_if_not_present
+    notice(MIPVerify.LOGGER, "Saving summary to $(summary_file_path)")
     
     dt = CSV.read(summary_file_path)
     return (results_dir, main_path, summary_file_path, dt)
@@ -201,6 +206,9 @@ function run_on_sample_for_untargeted_attack(sample_number::Integer, summary_dt:
         last_solve_status = previous_solves[end, :SolveStatus]
         last_objective_value = previous_solves[end, :ObjectiveValue]
         return !(last_solve_status == "Optimal") && !(last_objective_value |> isnan)
+    elseif solve_rerun_option == MIPVerify.retarget_successful_cases
+        last_solve_status = previous_solves[end, :SolveStatus]
+        return last_solve_status in ["Optimal", "UserObjLimit", "InfeasibleUndecidedDistance"]
     else
         throw(DomainError("SolveRerunOption $(solve_rerun_option) unknown."))
     end
@@ -215,11 +223,11 @@ to the complement of the true label.
     
 It creates a named directory in `save_path`, with the name summarizing 
   1) the name of the network in `nn`, 
-  2) the perturbation family `pp`, 
+  2) the perturbation family `pp`,
   3) the `norm_order`
   4) the `tolerance`.
 
-Within this directory, a summary of all the results is stored in `summary.csv`, and 
+Within this directory, a summary of all the results is stored in `summary.csv`, and
 results from individual runs are stored in the subfolder `run_results`.
 
 This functioned is designed so that it can be interrupted and restarted cleanly; it relies
@@ -238,14 +246,16 @@ particular index.
   solve_if_predicted_in_targeted` are passed
   through to [`find_adversarial_example`](@ref) and have the same default values; 
   see documentation for that function for more details.
-+ `solve_rerun_option::MIPVerify.SolveRerunOption`: Options are 
-  `never`, `always`, `resolve_ambiguous_cases`, and `refine_insecure_cases`. 
++ `solve_rerun_option::MIPVerify.SolveRerunOption`: Options are
+  `never`, `always`, `resolve_ambiguous_cases`, and `refine_insecure_cases`.
   See [`run_on_sample_for_untargeted_attack`](@ref) for more details.
 """
 function batch_find_untargeted_attack(
     nn::NeuralNet,
     dataset::MIPVerify.LabelledDataset,
     target_indices::AbstractArray{<:Integer},
+    num_classes::Integer,
+    adv_pred_opt::MIPVerify.AdversarialPredictionOption,
     main_solver::MathProgBase.SolverInterface.AbstractMathProgSolver;
     save_path::String = ".",
     solve_rerun_option::MIPVerify.SolveRerunOption = MIPVerify.never,
@@ -259,7 +269,7 @@ function batch_find_untargeted_attack(
     solve_if_predicted_in_targeted = true,
     adversarial_example_objective::AdversarialExampleObjective = closest
     )::Void
-    
+
     verify_target_indices(target_indices, dataset)
     (results_dir, main_path, summary_file_path, dt) = initialize_batch_solve(save_path, nn,  pp, norm_order, tolerance)
 
@@ -269,7 +279,7 @@ function batch_find_untargeted_attack(
             info(MIPVerify.LOGGER, "Working on index $(sample_number)")
             input = MIPVerify.get_image(dataset.images, sample_number)
             true_one_indexed_label = MIPVerify.get_label(dataset.labels, sample_number) + 1
-            d = find_adversarial_example(nn, input, true_one_indexed_label, main_solver, invert_target_selection = true, pp=pp, norm_order=norm_order, tolerance=tolerance, rebuild=rebuild, tightening_algorithm = tightening_algorithm, tightening_solver = tightening_solver, cache_model=cache_model, solve_if_predicted_in_targeted=solve_if_predicted_in_targeted, adversarial_example_objective=adversarial_example_objective)
+            d = find_adversarial_example(nn, input, true_one_indexed_label, true, num_classes, adv_pred_opt, main_solver, pp=pp, norm_order=norm_order, tolerance=tolerance, rebuild=rebuild, tightening_algorithm = tightening_algorithm, tightening_solver = tightening_solver, cache_model=cache_model, solve_if_predicted_in_targeted=solve_if_predicted_in_targeted, adversarial_example_objective=adversarial_example_objective)
 
             save_to_disk(sample_number, main_path, results_dir, summary_file_path, d, solve_if_predicted_in_targeted)
         end

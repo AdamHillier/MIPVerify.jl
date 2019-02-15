@@ -90,14 +90,14 @@ Makes popular machine learning datasets available as a `NamedTrainTestDataset`.
     * `MNIST`: [The MNIST Database of handwritten digits](http://yann.lecun.com/exdb/mnist/). Pixel values in original dataset are provided as uint8 (0 to 255), but are scaled to range from 0 to 1 here.
     * `CIFAR10`: [Labelled subset in 10 classes of 80 million tiny images dataset](https://www.cs.toronto.edu/~kriz/cifar.html). Pixel values in original dataset are provided as uint8 (0 to 255), but are scaled to range from 0 to 1 here.
 """
-function read_datasets(name::String)::NamedTrainTestDataset
+function read_datasets(name::String, train_start = 1, train_length = 60000)::NamedTrainTestDataset
     name = lowercase(name)
 
     if name in ["mnist", "cifar10"]
         dir = joinpath("datasets", name)
 
         m_train = prep_data_file(dir, "$(name)_int_train.mat") |> matread
-        train = LabelledImageDataset(m_train["images"]/255, m_train["labels"][:])
+        train = LabelledImageDataset(m_train["images"][train_start:train_start+train_length-1,:,:,:]/255, m_train["labels"][train_start:train_start+train_length-1])
 
         m_test = prep_data_file(dir, "$(name)_int_test.mat") |> matread
         test = LabelledImageDataset(m_test["images"]/255, m_test["labels"][:])

@@ -29,6 +29,12 @@ function extract_results_for_save(d::Dict)::Dict
     r[:TargetIndexes] = d[:TargetIndexes]
     r[:SolveStatus] = d[:SolveStatus]
     r[:PredictedIndex] = d[:PredictedIndex]
+    if haskey(d, :NaturalInputDistances)
+        r[:NaturalInputDistances] = d[:NaturalInputDistances]
+        r[:NaturalInputMinDistance] = minimum(r[:NaturalInputDistances])
+    else
+        r[:NaturalInputMinDistance] = NaN
+    end
     r[:TighteningApproach] = d[:TighteningApproach]
     r[:TotalTime] = d[:TotalTime]
     if !isnan(r[:ObjectiveValue])
@@ -52,9 +58,10 @@ end
 
 function generate_csv_summary_line(sample_number::Integer, results_file_relative_path::String, r::Dict)
     [
-        sample_number, 
+        sample_number,
         results_file_relative_path,
         r[:PredictedIndex],
+        r[:NaturalInputMinDistance],
         r[:TargetIndexes],
         r[:SolveTime],
         r[:SolveStatus],
@@ -69,9 +76,10 @@ end
 function generate_csv_summary_line_optimal(sample_number::Integer, d::Dict)
     assert(d[:PredictedIndex] in d[:TargetIndexes])
     [
-        sample_number, 
+        sample_number,
         "",
         d[:PredictedIndex],
+        d[:NaturalInputMinDistance],
         d[:TargetIndexes],
         0,
         :Optimal,
@@ -89,6 +97,7 @@ function create_summary_file_if_not_present(summary_file_path::String)
             "SampleNumber",
             "ResultRelativePath",
             "PredictedIndex",
+            "NaturalInputMinDistance",
             "TargetIndexes",
             "SolveTime",
             "SolveStatus",

@@ -114,17 +114,17 @@ function find_adversarial_example(
         # Calculate predicted index
         predicted_output = input |> nn
 
+        predicted_index = predicted_output[1:num_classes] |> get_max_index
+        d[:PredictedIndex] = predicted_index
+
         # If there is a distance threshold, the output must include the distances
         if adv_pred_opt == FindMinDistanceThreshold() || isa(adv_pred_opt, MinDistanceThreshold)
             @assert(length(predicted_output) == num_classes
                 + num_classes * (num_classes - 1) / 2)
+            d[:NaturalInputDistances] = get_class_distances(predicted_output[num_classes + 1:end], predicted_index, num_classes)
         else
             @assert(length(predicted_output) == num_classes)
         end
-
-        predicted_index = predicted_output[1:num_classes] |> get_max_index
-
-        d[:PredictedIndex] = predicted_index
 
         # Set target indexes
         d[:TargetIndexes] = get_target_indexes(target_selection,

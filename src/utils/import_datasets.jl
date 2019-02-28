@@ -93,7 +93,7 @@ Makes popular machine learning datasets available as a `NamedTrainTestDataset`.
 function read_datasets(name::String, train_start = 1, train_length = 60000)::NamedTrainTestDataset
     name = lowercase(name)
 
-    if name in ["mnist", "cifar10"]
+    if name in ["mnist", "cifar10", "fashion_mnist"]
         dir = joinpath("datasets", name)
 
         m_train = prep_data_file(dir, "$(name)_int_train.mat") |> matread

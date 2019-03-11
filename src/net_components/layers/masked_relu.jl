@@ -35,11 +35,8 @@ function Base.show(io::IO, p::MaskedReLU)
 end
 
 function apply(p::MaskedReLU, x::Array{<:Real})
-    println("Applying MaskedReLU")
     padded_shape = (ones(Int, ndims(x) - ndims(p.mask))..., size(p.mask)...)
     m = reshape(p.mask, padded_shape)
-    println(size(m))
-    println(size(x))
     masked_relu(x, m)
 end
 

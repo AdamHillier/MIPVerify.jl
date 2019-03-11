@@ -28,26 +28,25 @@ function apply(p::Graph, x::Array{<:JuMPReal})
         @assert haskey(p.inputs, i) && length(p.inputs[i]) > 0
     end
 
-    outputs_cache = Dict{Int, Array{<:JuMPReal}}()
+    outputs_cache = Dict{String, Array{<:JuMPReal}}()
 
     function get_output(index)
-        println("Get output index $index")
         if index == 0
-            println("Returning x")
             return x
-        elseif haskey(outputs_cache, index)
-            println("Returning cached value")
-            return outputs_cache[index]
+        elseif haskey(outputs_cache, "layer_$index")
+            return outputs_cache["layer_$index"]
         else
-            println("Recursive step")
             input_values = map(get_output, p.inputs[index])
-            println("Saving values to cache")
-            outputs_cache[index] = p.layers[index](input_values...)
-            return outputs_cache[index]
+            outputs_cache["layer_$index"] = p.layers[index](input_values...)
+            return outputs_cache["layer_$index"]
         end
     end
 
-    return get_output(length(p.layers))
+    output = get_output(length(p.layers))
+
+    matwrite("layer_outputs.mat", outputs_cache)
+
+    return output
 end
 
 (p::Graph)(x::Array{<:JuMPReal}) = apply(p, x)

@@ -11,11 +11,13 @@ Represents a Normalization operation.
 end
 
 function Base.show(io::IO, p::Normalize)
-    print(io, "Normalize(means: $(p.mean), stds: $(p.std))")
+    print(io, "Normalize(size: $(size(p.mean)))")
 end
 
 function apply(p::Normalize, x::Array{<:JuMPReal})
-    @assert size(p.mean) == size(p.std) == size(x)
+    println("Applying Normalize layer")
+    println("Size of mean, std, x: $(size(p.mean)), $(size(p.std)), $(size(x))")
+    # @assert size(p.mean) == size(p.std) == size(x)
     output = (x.-p.mean)./p.std
     return output
 end

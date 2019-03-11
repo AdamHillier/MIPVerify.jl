@@ -34,5 +34,20 @@ function Base.show(io::IO, p::MaskedReLU)
     )
 end
 
-(p::MaskedReLU)(x::Array{<:Real}) = masked_relu(x, p.mask)
-(p::MaskedReLU)(x::Array{<:JuMPLinearType}) = (info(MIPVerify.LOGGER, "Applying $p ... "); masked_relu(x, p.mask, nta = p.tightening_algorithm))
+function apply(p::MaskedReLU, x::Array{<:Real})
+    println("Applying MaskedReLU")
+    padded_shape = (ones(Int, ndims(x) - ndims(p.mask))..., size(p.mask)...)
+    m = reshape(p.mask, padded_shape)
+    println(size(m))
+    println(size(x))
+    masked_relu(x, m)
+end
+
+function apply(p::MaskedReLU, x::Array{<:JuMPLinearType})
+    info(MIPVerify.LOGGER, "Applying $p ... ")
+    padded_shape = (ones(Int, ndims(x) - ndims(p.mask))..., size(p.mask)...)
+    m = reshape(p.mask, padded_shape)
+    masked_relu(x, m, nta = p.tightening_algorithm)
+end
+
+(p::MaskedReLU)(x::Array{<:JuMPReal}) = apply(p, x)

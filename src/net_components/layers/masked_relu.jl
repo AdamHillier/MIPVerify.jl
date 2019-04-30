@@ -18,10 +18,16 @@ $(FIELDS)
 end
 
 function MaskedReLU(mask::Array{T}) where {T<:Real}
+    if size(mask)[1] == 1
+        mask = squeeze(mask, 1)
+    end
     MaskedReLU{T}(mask, Nullable{TighteningAlgorithm}())
 end
 
 function MaskedReLU(mask::Array{T}, ta::TighteningAlgorithm) where {T<:Real}
+    if size(mask)[1] == 1
+        mask = squeeze(mask, 1)
+    end
     MaskedReLU{T}(mask, Nullable{TighteningAlgorithm}(ta))
 end
 

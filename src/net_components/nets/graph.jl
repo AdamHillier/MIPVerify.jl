@@ -44,8 +44,6 @@ function apply(p::Graph, x::Array{<:JuMPReal})
 
     output = get_output(length(p.layers))
 
-    matwrite("layer_outputs.mat", outputs_cache)
-
     return output
 end
 

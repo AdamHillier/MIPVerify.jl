@@ -1,6 +1,6 @@
 export batch_find_untargeted_attack
 
-@enum SolveRerunOption never=1 always=2 resolve_ambiguous_cases=3 refine_insecure_cases=4 retarget_infeasible_cases=5 retarget_successful_cases=6
+@enum SolveRerunOption never=1 always=2 resolve_ambiguous_cases=3 refine_insecure_cases=4 retarget_infeasible_cases=5 retarget_successful_cases=6 retarget_undecided_distances=7
 
 struct BatchRunParameters
     nn::NeuralNet
@@ -218,6 +218,9 @@ function run_on_sample_for_untargeted_attack(sample_number::Integer, summary_dt:
     elseif solve_rerun_option == MIPVerify.retarget_successful_cases
         last_solve_status = previous_solves[end, :SolveStatus]
         return last_solve_status in ["Optimal", "UserObjLimit", "InfeasibleUndecidedDistance"]
+    elseif solve_rerun_option == MIPVerify.retarget_undecided_distances
+        last_solve_status = previous_solves[end, :SolveStatus]
+        return startswith(last_solve_status, "InfeasibleUndecidedDistance")
     else
         throw(DomainError("SolveRerunOption $(solve_rerun_option) unknown."))
     end

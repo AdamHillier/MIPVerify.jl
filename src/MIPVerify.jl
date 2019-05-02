@@ -252,6 +252,8 @@ function find_min_distance_threshold(
     lower_bound = -2.4
     upper_bound = 4
 
+    undecided = false
+
     while upper_bound - lower_bound > 0.101
         mid_point = round((upper_bound + lower_bound) / 2, 1)
         solve_status = verify_distances(nn, input, target_indices,
@@ -263,13 +265,19 @@ function find_min_distance_threshold(
             upper_bound = mid_point
         elseif solve_status in [:Optimal, :Suboptimal, :UserObjLimit]
             lower_bound = mid_point
-        else
-            warn(MIPVerify.LOGGER, "Unable to find distance threshold, $(upper_bound), $(lower_bound), $(mid_point), $(solve_status)")
-            return string("InfeasibleUndecidedDistance", upper_bound)
+        else # The verification failed
+            undecided = true
+            lower_bound = mid_point
         end
     end
-    warn(MIPVerify.LOGGER, "Found distance threshold: $(upper_bound)")
-    return string("InfeasibleDistance", upper_bound)
+
+    if undecided
+        warn(MIPVerify.LOGGER, "Unable to find true distance threshold, $(upper_bound), $(lower_bound)")
+        return string("InfeasibleUndecidedDistance", upper_bound)
+    else
+        warn(MIPVerify.LOGGER, "Found distance threshold: $(upper_bound)")
+        return string("InfeasibleDistance", upper_bound)
+    end
 end
 
 function verify_distances(

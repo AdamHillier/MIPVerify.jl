@@ -62,7 +62,7 @@ on what individual dictionary entries correspond to.
 We guarantee that `y[j] - y[i] ≥ tolerance` for some `j ∈ target_selection` and for all `i ∉ target_selection`.
 
 # Named Arguments:
-+ `invert_target_selection::Bool`: Defaults to `false`. If `true`, sets `target_selection` to 
++ `invert_target_selection::Bool`: Defaults to `false`. If `true`, sets `target_selection` to
     be its complement.
 + `pp::PerturbationFamily`: Defaults to `UnrestrictedPerturbationFamily()`. Determines
     the family of perturbations over which we are searching for adversarial examples.

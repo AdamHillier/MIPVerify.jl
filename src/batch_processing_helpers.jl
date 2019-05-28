@@ -189,7 +189,7 @@ and `:ObjectiveValue`.
 Behavior for different choices of `solve_rerun_option`:
 + `never`: `true` if and only if there is no previous completed solve.
 + `always`: `true` always.
-+ `resolve_ambiguous_cases`: `true` if there is no previous completed solve, or if the 
++ `resolve_ambiguous_cases`: `true` if there is no previous completed solve, or if the
     most recent completed solve a) did not find a counter-example BUT b) the optimization
     was not demosntrated to be infeasible.
 + `refine_insecure_cases`: `true` if there is no previous completed solve, or if the most
@@ -233,7 +233,7 @@ Runs [`find_adversarial_example`](@ref) for the specified neural network `nn` an
 for samples identified by the `target_indices`, with the target labels for each sample set 
 to the complement of the true label.
     
-It creates a named directory in `save_path`, with the name summarizing 
+It creates a named directory in `save_path`, with the name summarizing
   1) the name of the network in `nn`, 
   2) the perturbation family `pp`,
   3) the `norm_order`

@@ -115,7 +115,7 @@ function model_filename(
     pp::PerturbationFamily)::String
     hash_val = model_hash(nn, input, pp)
     input_size = size(input)
-    return "$(nn.UUID).$(input_size).$(string(pp)).$(hash_val).jls"
+    return replace("$(nn.UUID).$(input_size).$(string(pp)).$(hash_val).jls", "/", "_")
 end
 
 function get_reusable_model(
